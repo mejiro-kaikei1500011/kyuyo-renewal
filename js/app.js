@@ -412,6 +412,8 @@
   function showSharePanel(text) {
     $("shareText").value = text;
     $("sharePanel").classList.remove("hidden");
+    const panel = $("sharePanel");
+    if (panel.scrollIntoView) panel.scrollIntoView({ behavior: "smooth", block: "center" });
   }
   function copyShareText() {
     const ta = $("shareText");
