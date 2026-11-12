@@ -172,7 +172,10 @@
     setVal("otHourly", rec.otHourly);
     setVal("otHours", rec.otHours);
     const emp = currentEmp();
-    $("hourlyFields").classList.toggle("hidden", isBonus || !emp || emp.workType !== "part");
+    const isPart = !isBonus && !!emp && emp.workType === "part";
+    $("hourlyFields").classList.toggle("hidden", !isPart);
+    // 労働時間数は、アルバイトの枠の中（通常の時間）と社員の欄とで置き場所を切り替える
+    $(isPart ? "hoursSlotPart" : "hoursSlot").appendChild($("hoursLabel"));
     setVal("refMonthly", rec.refMonthly);
     setVal("recHStd", rec.hStd || "");
     setVal("recPStd", rec.pStd || "");

@@ -56,7 +56,7 @@
             </div>
             <div class="row">
               <label>残業時間数<input type="text" inputmode="numeric" id="otHours" placeholder="0"></label>
-              <label>&nbsp;</label>
+              <div id="hoursSlotPart"></div>
             </div>
             <p class="hint">基本給＝時給×労働時間数（残業を除く）。時間外手当＝残業時給×残業時間数×1.25（法定の割増）。欄は直接直すこともできます。</p>
           </div>
@@ -85,7 +85,7 @@
           </div>
           <div class="row">
             <label>労働日数<input type="text" inputmode="numeric" id="days" placeholder="0"></label>
-            <label>労働時間数<input type="text" inputmode="numeric" id="hours" placeholder="0"></label>
+            <div id="hoursSlot"><label id="hoursLabel">労働時間数<input type="text" inputmode="numeric" id="hours" placeholder="0"></label></div>
           </div>
         </div>
         <div id="bonusFields" class="hidden">
