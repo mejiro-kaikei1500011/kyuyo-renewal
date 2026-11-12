@@ -70,11 +70,10 @@ $("transferYm").value = ym;
 $("transferYm").dispatchEvent(new w.Event("change", { bubbles: true }));
 ok("transfer lists sample", $("transferOut").textContent.includes("山田 太郎"));
 
-// 8. メール・LINE（画面遷移はスタブ）
-$("mailPayBtn").click();
-ok("mail share message set", $("shareMsg").textContent.includes("メール"));
-$("linePayBtn").click();
-ok("line share message set", $("shareMsg").textContent.includes("LINE"));
+// 8. テキストで表示（送信はしない）
+$("textPayBtn").click();
+ok("text panel shown", !$("sharePanel").classList.contains("hidden"));
+ok("text contains slip", $("shareText").value.includes("山田 太郎"));
 
 // 9. 賞与切替
 $("payKind").value = "bonus";

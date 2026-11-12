@@ -369,7 +369,7 @@
     setShareMsg(`${ymLabel(prevYm(ym))}の入力をコピーしました。`);
   }
 
-  // ---------- メール・LINEで送る ----------
+  // ---------- テキストで表示 ----------
   function slipText(emp, ym, kind, r) {
     const isBonus = kind === "bonus";
     const lines = [];
@@ -408,7 +408,7 @@
     return { emp, ym, kind, r, subject: `${ymLabel(ym)} ${kind === "bonus" ? "賞与明細" : "給与明細"}（${emp.name}）`, body: slipText(emp, ym, kind, r) };
   }
   function setShareMsg(msg) { $("shareMsg").textContent = msg; }
-  // 共有の本文を画面に出し、コピーできるようにする（メールアプリが開かない環境でも送れるように）
+  // 明細の本文を画面に表示し、コピーできるようにする（送信機能は持たない）
   function showSharePanel(text) {
     $("shareText").value = text;
     $("sharePanel").classList.remove("hidden");
@@ -426,34 +426,12 @@
     }
     setShareMsg(ok ? "本文をコピーしました。" : "コピーできませんでした。本文を選択して手動でコピーしてください。");
   }
-  function sendMail() {
+  function showSlipText() {
     const s = currentSlip();
     if (!s) return;
-    if (!confirm("給与情報は個人情報です。送信先に間違いがないか確認してから、メール作成画面を開きます。よろしいですか？")) return;
     const to = s.emp.email || "";
-    const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(s.subject)}&body=${encodeURIComponent(s.body)}`;
-    // 本文はいつでもコピーできるように表示する
     showSharePanel(`宛先: ${to || "（社員の登録にメールアドレスがありません）"}\n件名: ${s.subject}\n\n${s.body}`);
-    // リンクのクリックで開く（メールアプリが無い・ブラウザが対応していない場合は開けないことがある）
-    try {
-      const a = document.createElement("a");
-      a.href = url;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setShareMsg("メール作成画面を開こうとしました。開かない場合は下の本文をコピーして、メールに貼り付けてください。");
-    } catch (e) {
-      setShareMsg("メール作成画面を開けませんでした。下の本文をコピーして、メールに貼り付けてください。");
-    }
-  }
-  function sendLine() {
-    const s = currentSlip();
-    if (!s) return;
-    if (!confirm("給与情報は個人情報です。LINEの共有画面を開きます。送信先を確認してから送信してください。よろしいですか？")) return;
-    const url = `https://line.me/R/share?text=${encodeURIComponent(s.subject + "\n\n" + s.body)}`;
-    try { window.open(url, "_blank", "noopener"); setShareMsg("LINEの共有画面を開きました。送信先を確認してから送信してください。"); }
-    catch (e) { setShareMsg("LINEの共有画面を開けませんでした。"); }
-    showSharePanel(s.subject + "\n\n" + s.body);
+    setShareMsg("本文を表示しました。「本文をコピー」で貼り付けて送ってください。");
   }
 
   // ---------- 社員 ----------
@@ -878,8 +856,7 @@
       loadCurrentRecord();
     });
     $("printPayBtn").addEventListener("click", () => printTarget("pay", () => refresh(readRecFromForm())));
-    $("mailPayBtn").addEventListener("click", sendMail);
-    $("linePayBtn").addEventListener("click", sendLine);
+    $("textPayBtn").addEventListener("click", showSlipText);
     $("copyShareBtn").addEventListener("click", copyShareText);
 
     $("empForm").addEventListener("submit", onEmpSubmit);
