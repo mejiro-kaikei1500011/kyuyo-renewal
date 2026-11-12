@@ -39,9 +39,15 @@
     return { employees: [], records: {} };
   }
   let db = loadDb();
+  // 保存できたかを返す（失敗を画面に知らせるため）
   function saveDb() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); }
-    catch (e) { /* 保存領域が使えない環境では表示のみ */ }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(db)); return true; }
+    catch (e) { return false; }
+  }
+  function setEmpMsg(msg, isError) {
+    const p = $("empMsg");
+    p.textContent = msg;
+    p.classList.toggle("error", !!isError);
   }
   function uid() { return "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
 
@@ -500,11 +506,13 @@
     const idx = db.employees.findIndex((e) => e.id === id);
     if (idx >= 0) db.employees[idx] = emp; else db.employees.push(emp);
     db.records[id] = db.records[id] || {};
-    saveDb();
+    const saved = saveDb();
     fillEmployeeSelects();
     renderEmpList();
     resetEmpForm();
     loadCurrentRecord();
+    if (saved) setEmpMsg(`「${emp.name}」を保存しました。社員一覧に表示されています。`, false);
+    else setEmpMsg("保存できませんでした。ブラウザの保存領域（localStorage）が使えない設定の可能性があります。この画面を閉じると消えます。", true);
   }
   function onEmpListClick(ev) {
     const edit = ev.target.getAttribute("data-edit");

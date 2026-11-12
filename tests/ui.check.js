@@ -88,6 +88,7 @@ $("empPref").dispatchEvent(new w.Event("change", { bubbles: true }));
 ok("kanagawa hides custom rate (known)", $("empCustomRateLabel").classList.contains("hidden"));
 $("empForm").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
 ok("employee added", JSON.parse(w.localStorage.getItem("kyuyo-renewal-v1")).employees.length === 2);
+ok("employee save message shown", $("empMsg").textContent.includes("保存しました") && !$("empMsg").classList.contains("error"));
 
 console.log("errors:", errors.length ? errors : "none");
 

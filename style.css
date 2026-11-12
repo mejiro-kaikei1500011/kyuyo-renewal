@@ -152,3 +152,5 @@ table.list th, table.list td { border-bottom: 1px solid #e3e9de; padding: 6px; t
 .tabs { flex: 1; }
 .tab.tab-quick { margin-left: auto; background: #b7791f; border-color: #b7791f; }
 .tab.tab-quick.active { background: #fff; color: #b7791f; }
+
+.hint.error { color: #b00020; font-weight: bold; }
