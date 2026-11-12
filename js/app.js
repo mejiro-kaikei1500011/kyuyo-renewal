@@ -56,8 +56,14 @@
   const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function ymLabel(ym) { const [y, m] = ym.split("-"); return `${y}年${Number(m)}月`; }
   // 翌月払いの社員は、支払月の前月を勤務月として表示する（記録は支払月のキーのまま）
+  function shiftYm(ym, n) {
+    const [y, m] = ym.split("-").map(Number);
+    const d = new Date(y, m - 1 + n, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  }
   function payLabel(emp, ym) {
-    if (emp && emp.payLag === 1) return `${ymLabel(prevYm(ym))}分（${ymLabel(ym)}支払）`;
+    const lag = emp ? Number(emp.payLag) || 0 : 0;
+    if (lag > 0) return `${ymLabel(shiftYm(ym, -lag))}分（${ymLabel(ym)}支払）`;
     return ymLabel(ym);
   }
   function prevYm(ym) {
@@ -82,6 +88,13 @@
     const deps = [];
     for (let i = 0; i <= 7; i++) deps.push(`<option value="${i}">${i}人</option>`);
     $("empDeps").innerHTML = deps.join("");
+    const dayOpts = (zeroLabel) => {
+      const o = [`<option value="0">${zeroLabel}</option>`];
+      for (let d = 1; d <= 31; d++) o.push(`<option value="${d}">${d}日</option>`);
+      return o.join("");
+    };
+    $("empCloseDay").innerHTML = dayOpts("末日");
+    $("empPayDay").innerHTML = dayOpts("末日");
   }
 
   // ---------- 手当・その他控除の入力行 ----------
@@ -502,6 +515,8 @@
     setVal("empPref", "tokyo");
     setVal("empEmail", "");
     setVal("empPayLag", "0");
+    setVal("empCloseDay", "0");
+    setVal("empPayDay", "25");
     setVal("stdFrom", "");
     updateRateHint();
     renderStdList(null);
@@ -522,7 +537,9 @@
       pref: val("empPref"),
       customHealthRate: (db.employees.find((x) => x.id === id) || {}).customHealthRate || "",
       email: val("empEmail").trim(),
-      payLag: val("empPayLag") === "1" ? 1 : 0,
+      payLag: Number(val("empPayLag")) || 0,
+      closeDay: val("empCloseDay") || "0",
+      payDay: val("empPayDay") || "0",
       stdHistory: (db.employees.find((x) => x.id === id) || {}).stdHistory || []
     };
     const idx = db.employees.findIndex((e) => e.id === id);
@@ -554,7 +571,9 @@
       setVal("empWithholding", e.withholdingCol === "otsu" ? "otsu" : "kou");
       setVal("empPref", e.pref || "tokyo");
       setVal("empEmail", e.email || "");
-      setVal("empPayLag", e.payLag === 1 ? "1" : "0");
+      setVal("empPayLag", String(Number(e.payLag) || 0));
+      setVal("empCloseDay", String(e.closeDay || "0"));
+      setVal("empPayDay", String(e.payDay || "0"));
       updateRateHint();
       renderStdList(e);
     }

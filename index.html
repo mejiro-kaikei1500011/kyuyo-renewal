@@ -208,12 +208,16 @@
           <p class="hint" id="stdHint"></p>
           <ul id="stdList" class="std-list"></ul>
         </div>
-        <label>支払いの時期
-          <select id="empPayLag">
-            <option value="0">当月払い（勤務月と同じ月に支払う）</option>
-            <option value="1">翌月払い（勤務月の翌月に支払う）</option>
-          </select>
-        </label>
+        <div class="row">
+          <label>締め日<select id="empCloseDay"></select></label>
+          <label>支給月<select id="empPayLag">
+            <option value="0">当月</option>
+            <option value="1">翌月</option>
+            <option value="2">翌々月</option>
+          </select></label>
+        </div>
+        <label>支給日<select id="empPayDay"></select></label>
+        <p class="hint">締め日から見た支給月で、明細の勤務月を決めます。例：末日締め・翌月25日払い → 支給月「翌月」、支給日「25日」。</p>
         <label>メールアドレス（送信先・任意）<input type="email" id="empEmail" placeholder="例：taro@example.com"></label>
         <div class="actions">
           <button type="submit" class="primary">保存</button>
