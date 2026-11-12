@@ -75,6 +75,10 @@
             <label>労働日数<input type="text" inputmode="numeric" id="days" placeholder="0"></label>
             <label>労働時間数<input type="text" inputmode="numeric" id="hours" placeholder="0"></label>
           </div>
+          <div id="hourlyFields" class="hidden">
+            <label>時給（アルバイト）<input type="text" inputmode="numeric" id="hourly" placeholder="0"></label>
+            <p class="hint">時給×労働時間数で基本給を自動計算します。基本給の欄で直すこともできます。</p>
+          </div>
         </div>
         <div id="bonusFields" class="hidden">
           <label>賞与額<input type="text" inputmode="numeric" id="bonusAmount" placeholder="0"></label>

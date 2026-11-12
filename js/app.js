@@ -129,7 +129,7 @@
     saved.filter((r) => !FIXED_DED.includes(r.name)).forEach((r) => addRow("dedRows", r, false, false));
   }
   function hasAnyValue(rec) {
-    return ["basic", "overtime", "commute", "absence", "days", "hours", "refMonthly", "hStd", "pStd"]
+    return ["basic", "overtime", "commute", "absence", "days", "hours", "hourly", "refMonthly", "hStd", "pStd"]
       .some((k) => String(rec[k] || "").trim() !== "")
       || rec.allowances.some((r) => String(r.amount).trim() !== "" || (!FIXED_ALLOW.includes(r.name) && r.name.trim() !== ""))
       || rec.deductions.some((r) => String(r.amount).trim() !== "" || (!FIXED_DED.includes(r.name) && r.name.trim() !== ""));
@@ -148,6 +148,7 @@
       absence: val("absence"),
       days: val("days"),
       hours: val("hours"),
+      hourly: kind === "bonus" ? "" : val("hourly"),
       allowances: kind === "bonus" ? [] : readRows("allowRows", true),
       deductions: readRows("dedRows", false),
       refMonthly: val("refMonthly"),
@@ -165,6 +166,9 @@
     setVal("absence", rec.absence);
     setVal("days", rec.days);
     setVal("hours", rec.hours);
+    setVal("hourly", rec.hourly);
+    const emp = currentEmp();
+    $("hourlyFields").classList.toggle("hidden", isBonus || !emp || emp.workType !== "part");
     setVal("refMonthly", rec.refMonthly);
     setVal("recHStd", rec.hStd || "");
     setVal("recPStd", rec.pStd || "");
@@ -173,7 +177,7 @@
     $("salaryFields").classList.toggle("hidden", isBonus);
     $("bonusFields").classList.toggle("hidden", !isBonus);
   }
-  const EMPTY_REC = { basic: "", overtime: "", commute: "", absence: "", days: "", hours: "", refMonthly: "", allowances: [], deductions: [] };
+  const EMPTY_REC = { basic: "", overtime: "", commute: "", absence: "", days: "", hours: "", hourly: "", refMonthly: "", allowances: [], deductions: [] };
 
   // 同じ社員の直前の給与記録（賞与は引き継がない）
   function latestPriorRecord(empId, ym, kind) {
@@ -843,6 +847,12 @@
     // 入力欄は左の入力フォームと明細の枠の2か所にある（枠は form の外なので両方に付ける）
     const onAnyInput = (ev) => {
       if (ev.target.id === "paySelect" || ev.target.id === "payYm" || ev.target.id === "payKind") { onSelectChange(); return; }
+      if (ev.target.id === "hourly" || ev.target.id === "hours") {
+        // アルバイトは時給×労働時間数で基本給を自動計算する
+        const h = Number(String(val("hourly")).replace(/,/g, "")) || 0;
+        const hr = Number(String(val("hours")).replace(/,/g, "")) || 0;
+        if (h > 0 && hr > 0) setVal("basic", Math.round(h * hr));
+      }
       onPayInput(ev);
     };
     ["input", "change"].forEach((type) => $("payForm").addEventListener(type, onAnyInput));
