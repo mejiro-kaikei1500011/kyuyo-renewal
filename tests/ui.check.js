@@ -121,4 +121,42 @@ console.log("errors:", errors.length ? errors : "none");
   $("qBasic").value = "";
   $("qBasic").dispatchEvent(new w.Event("input", { bubbles: true }));
 }
+// 簡易計算：標準報酬月額を手動で指定できる
+{
+  $("qBasic").value = "300000";
+  $("qBasic").dispatchEvent(new w.Event("input", { bubbles: true }));
+  $("qHStd").value = "200000";
+  $("qHStd").dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("quick calc uses manual health grade", $("quickOut").textContent.includes("標準報酬月額（健康保険）200,000円"));
+  $("qHStd").value = "";
+  $("qHStd").dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("quick calc returns to auto grade", $("quickOut").textContent.includes("標準報酬月額（健康保険）300,000円"));
+  $("qBasic").value = "";
+  $("qBasic").dispatchEvent(new w.Event("input", { bubbles: true }));
+}
+// 社員：標準報酬月額の履歴を追加・削除できる
+{
+  $("empId").value = "sample1";
+  $("stdFrom").value = "2026-04";
+  $("stdH").value = "200000";
+  $("stdAddBtn").click();
+  const hist = JSON.parse(w.localStorage.getItem("kyuyo-renewal-v1")).employees.find((e) => e.id === "sample1").stdHistory || [];
+  ok("std history added", hist.length === 1 && hist[0].from === "2026-04" && hist[0].hStd === 200000);
+  ok("std history listed", $("stdList").textContent.includes("200,000円"));
+  $("stdList").querySelector("[data-std-del]").click();
+  const after = JSON.parse(w.localStorage.getItem("kyuyo-renewal-v1")).employees.find((e) => e.id === "sample1").stdHistory || [];
+  ok("std history deleted", after.length === 0);
+  $("empId").value = "";
+}
+// 給与明細：この月の標準報酬月額を画面で選べる
+{
+  $("paySelect").value = "sample1";
+  $("paySelect").dispatchEvent(new w.Event("change", { bubbles: true }));
+  $("recHStd").value = "200000";
+  $("recHStd").dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("month grade selection applied", $("breakdown").textContent.includes("200,000円"));
+  $("recHStd").value = "";
+  $("recHStd").dispatchEvent(new w.Event("change", { bubbles: true }));
+  ok("month grade selection cleared to auto", !$("breakdown").textContent.includes("200,000円"));
+}
 console.log("errors (final):", errors.length ? errors : "none");

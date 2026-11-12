@@ -137,8 +137,13 @@
     return socialAmounts(hStd, pStd, emp, R, withChild);
   }
 
+  // 月額の社会保険料。emp.hStdOverride / pStdOverride（標準報酬月額の手動指定、0か空なら等級表で決定）を優先する
   function socialMonthly(gross, emp, R, withChild) {
-    return socialAmounts(gradeStd(R.healthGrades, gross), gradeStd(R.pensionGrades, gross), emp, R, withChild);
+    const hOver = num(emp.hStdOverride);
+    const pOver = num(emp.pStdOverride);
+    const hStd = hOver > 0 ? hOver : gradeStd(R.healthGrades, gross);
+    const pStd = pOver > 0 ? pOver : gradeStd(R.pensionGrades, gross);
+    return socialAmounts(hStd, pStd, emp, R, withChild);
   }
 
   // 1件分の給与・賞与を計算する
@@ -146,7 +151,29 @@
   // rec : { ym:'YYYY-MM', kind:'salary'|'bonus', basic, overtime, commute, absence,
   //         allowances:[{name,amount,taxable}], deductions:[{name,amount}],
   //         refMonthly }
-  function compute(emp, rec, R) {
+  // 標準報酬月額の履歴（適用開始年月 from ごと）から、その給与月に有効な指定を選ぶ
+  // hStd / pStd が 0 か空なら等級表で自動決定（履歴がなければ emp をそのまま使う）
+  function applyStdHistory(emp, ym) {
+    const list = Array.isArray(emp.stdHistory) ? emp.stdHistory : [];
+    if (!ym || list.length === 0) return emp;
+    let pick = null;
+    for (const h of list) {
+      if (h && h.from && h.from <= ym && (!pick || h.from > pick.from)) pick = h;
+    }
+    if (!pick) return emp;
+    return Object.assign({}, emp, { hStdOverride: pick.hStd || "", pStdOverride: pick.pStd || "" });
+  }
+
+  function compute(empIn, rec, R) {
+    let emp = applyStdHistory(empIn, rec.ym);
+    // この月の給与記録で指定された標準報酬月額は、履歴より優先する（空欄は履歴・等級表のまま）
+    const monthH = num(rec.hStd), monthP = num(rec.pStd);
+    if (monthH > 0 || monthP > 0) {
+      emp = Object.assign({}, emp, {
+        hStdOverride: monthH > 0 ? monthH : emp.hStdOverride,
+        pStdOverride: monthP > 0 ? monthP : emp.pStdOverride
+      });
+    }
     const isBonus = rec.kind === "bonus";
     const basic = num(rec.basic);
     const overtime = isBonus ? 0 : num(rec.overtime);
@@ -220,6 +247,6 @@
 
   return {
     EMP_LABEL, num, gradeStd, healthRateFor, childSupportApplies,
-    salaryDeduction, incomeTaxAnnual, monthlyWithholding, compute
+    salaryDeduction, incomeTaxAnnual, monthlyWithholding, applyStdHistory, compute
   };
 });

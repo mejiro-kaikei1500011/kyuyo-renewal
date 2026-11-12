@@ -56,6 +56,11 @@
             <label>通勤手当<input type="text" inputmode="numeric" id="commute" placeholder="0"></label>
             <label>不就労控除<input type="text" inputmode="numeric" id="absence" placeholder="0"></label>
           </div>
+          <div class="row">
+            <label>健康保険の標準報酬月額<select id="recHStd"></select></label>
+            <label>厚生年金の標準報酬月額<select id="recPStd"></select></label>
+          </div>
+          <p class="hint">空欄の「自動」は、社員の履歴か等級表で決まります。随時改定などでこの月だけ変えるときに選んでください。</p>
           <div class="dyn-section">
             <div class="dyn-head"><span>手当</span><button type="button" id="addAllowBtn">＋ その他手当</button></div>
             <div id="allowRows"></div>
@@ -116,6 +121,11 @@
           </select>
         </label>
         <label class="check"><input type="checkbox" id="qAge40"> 40歳以上（介護保険あり）</label>
+        <div class="row">
+          <label>健康保険の標準報酬月額<select id="qHStd"></select></label>
+          <label>厚生年金の標準報酬月額<select id="qPStd"></select></label>
+        </div>
+        <p class="hint">空欄の「自動」は給与額から等級表で決まります。手動で選ぶと、その金額で計算します。</p>
         <label>都道府県（健康保険料率）<select id="qPref"></select></label>
         <label id="qCustomRateLabel">健康保険料率（％・手入力）<input type="text" inputmode="decimal" id="qCustomRate" placeholder="例：9.90"></label>
         <p class="hint" id="qRateHint"></p>
@@ -164,6 +174,20 @@
             <option value="otsu">乙欄（副業・2か所目の給与）</option>
           </select>
         </label>
+        <div class="std-history">
+          <h3>標準報酬月額（等級）の履歴</h3>
+          <p class="hint">「自動」は給与額から等級表で決めます。等級が変わった月から、次の行を追加してください。履歴のない月は自動です。</p>
+          <div class="row">
+            <label>適用開始年月<input type="month" id="stdFrom"></label>
+          </div>
+          <div class="row">
+            <label>健康保険<select id="stdH"></select></label>
+            <label>厚生年金<select id="stdP"></select></label>
+          </div>
+          <div class="actions"><button type="button" id="stdAddBtn">この月から追加</button></div>
+          <p class="hint" id="stdHint"></p>
+          <ul id="stdList" class="std-list"></ul>
+        </div>
         <label>メールアドレス（送信先・任意）<input type="email" id="empEmail" placeholder="例：taro@example.com"></label>
         <div class="actions">
           <button type="submit" class="primary">保存</button>

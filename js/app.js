@@ -123,7 +123,7 @@
     saved.filter((r) => !FIXED_DED.includes(r.name)).forEach((r) => addRow("dedRows", r, false, false));
   }
   function hasAnyValue(rec) {
-    return ["basic", "overtime", "commute", "absence", "days", "hours", "refMonthly"]
+    return ["basic", "overtime", "commute", "absence", "days", "hours", "refMonthly", "hStd", "pStd"]
       .some((k) => String(rec[k] || "").trim() !== "")
       || rec.allowances.some((r) => String(r.amount).trim() !== "" || (!FIXED_ALLOW.includes(r.name) && r.name.trim() !== ""))
       || rec.deductions.some((r) => String(r.amount).trim() !== "" || (!FIXED_DED.includes(r.name) && r.name.trim() !== ""));
@@ -144,7 +144,9 @@
       hours: val("hours"),
       allowances: kind === "bonus" ? [] : readRows("allowRows", true),
       deductions: readRows("dedRows", false),
-      refMonthly: val("refMonthly")
+      refMonthly: val("refMonthly"),
+      hStd: kind === "bonus" ? "" : val("recHStd"),
+      pStd: kind === "bonus" ? "" : val("recPStd")
     };
   }
   // 記録の値を入力欄（左の欄）へ反映する。明細の枠は buildFrame が作る
@@ -158,6 +160,8 @@
     setVal("days", rec.days);
     setVal("hours", rec.hours);
     setVal("refMonthly", rec.refMonthly);
+    setVal("recHStd", rec.hStd || "");
+    setVal("recPStd", rec.pStd || "");
     setAllowRows(rec.allowances, isBonus);
     setDedRows(rec.deductions);
     $("salaryFields").classList.toggle("hidden", isBonus);
@@ -464,7 +468,9 @@
     setVal("empPref", "tokyo");
     setVal("empCustomRate", "");
     setVal("empEmail", "");
+    setVal("stdFrom", "");
     updateRateHint();
+    renderStdList(null);
   }
   function onEmpSubmit(ev) {
     ev.preventDefault();
@@ -480,7 +486,8 @@
       withholdingCol: val("empWithholding") === "otsu" ? "otsu" : "kou",
       pref: val("empPref"),
       customHealthRate: val("empCustomRate"),
-      email: val("empEmail").trim()
+      email: val("empEmail").trim(),
+      stdHistory: (db.employees.find((x) => x.id === id) || {}).stdHistory || []
     };
     const idx = db.employees.findIndex((e) => e.id === id);
     if (idx >= 0) db.employees[idx] = emp; else db.employees.push(emp);
@@ -510,6 +517,7 @@
       setVal("empCustomRate", e.customHealthRate || "");
       setVal("empEmail", e.email || "");
       updateRateHint();
+      renderStdList(e);
     }
     if (del) {
       const e = db.employees.find((x) => x.id === del);
@@ -674,7 +682,9 @@
       deps: Number(val("qDeps")) || 0,
       pref: val("qPref"),
       customHealthRate: val("qCustomRate"),
-      withholdingCol: val("qWithholding") === "otsu" ? "otsu" : "kou"
+      withholdingCol: val("qWithholding") === "otsu" ? "otsu" : "kou",
+      hStdOverride: val("qHStd"),
+      pStdOverride: val("qPStd")
     };
   }
   function quickRec() {
@@ -727,6 +737,10 @@
     const deps = [];
     for (let i = 0; i <= 7; i++) deps.push(`<option value="${i}">${i}人</option>`);
     $("qDeps").innerHTML = deps.join("");
+    // 標準報酬月額の手動指定（空欄は等級表で自動決定）
+    const stdOptions = stdOptionsHtml;
+    $("qHStd").innerHTML = stdOptions(R.healthGrades);
+    $("qPStd").innerHTML = stdOptions(R.pensionGrades);
     setVal("qPref", "tokyo");
     const now = new Date();
     setVal("qYm", `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
@@ -739,6 +753,41 @@
     $("quickForm").addEventListener("input", onQuick);
     $("quickForm").addEventListener("change", onQuick);
     $("quickForm").addEventListener("submit", (ev) => { ev.preventDefault(); renderQuick(); });
+  }
+
+  // ---------- 標準報酬月額の履歴（社員画面） ----------
+  function stdOptionsHtml(list) {
+    return '<option value="">自動（給与額から決定）</option>' + list.map(([, std]) => `<option value="${std}">${fmt(std)}円</option>`).join("");
+  }
+  function renderStdList(emp) {
+    const list = (emp && emp.stdHistory) || [];
+    $("stdList").innerHTML = list.length
+      ? list.slice().sort((a, b) => (a.from < b.from ? -1 : 1)).map((h) => `<li>${esc(ymLabel(h.from))}〜：健康保険 ${h.hStd ? fmt(h.hStd) + "円" : "自動"} ／ 厚生年金 ${h.pStd ? fmt(h.pStd) + "円" : "自動"} <button type="button" data-std-del="${esc(h.from)}">削除</button></li>`).join("")
+      : '<li class="hint">履歴はありません（すべて等級表で自動決定）</li>';
+    $("stdHint").textContent = emp ? "" : "社員を保存してから、履歴を追加できます。";
+  }
+  function currentStdEmp() { return db.employees.find((e) => e.id === val("empId")) || null; }
+  function onStdAdd() {
+    const emp = currentStdEmp();
+    const from = val("stdFrom");
+    if (!emp) { $("stdHint").textContent = "社員を保存してから、履歴を追加できます。"; return; }
+    if (!from) { $("stdHint").textContent = "適用開始年月を選んでください。"; return; }
+    emp.stdHistory = (emp.stdHistory || []).filter((h) => h.from !== from)
+      .concat({ from, hStd: Number(val("stdH")) || "", pStd: Number(val("stdP")) || "" });
+    saveDb();
+    renderStdList(emp);
+    setVal("stdFrom", "");
+    loadCurrentRecord();
+  }
+  function onStdListClick(ev) {
+    const from = ev.target.getAttribute("data-std-del");
+    if (!from) return;
+    const emp = currentStdEmp();
+    if (!emp) return;
+    emp.stdHistory = (emp.stdHistory || []).filter((h) => h.from !== from);
+    saveDb();
+    renderStdList(emp);
+    loadCurrentRecord();
   }
 
   // ---------- 画面切替・初期化 ----------
@@ -766,6 +815,13 @@
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     fillStaticSelects();
     initQuick();
+    $("stdH").innerHTML = stdOptionsHtml(R.healthGrades);
+    $("recHStd").innerHTML = stdOptionsHtml(R.healthGrades);
+    $("recPStd").innerHTML = stdOptionsHtml(R.pensionGrades);
+    $("stdP").innerHTML = stdOptionsHtml(R.pensionGrades);
+    renderStdList(null);
+    $("stdAddBtn").addEventListener("click", onStdAdd);
+    $("stdList").addEventListener("click", onStdListClick);
     setVal("payYm", ym);
     setVal("transferYm", ym);
     setVal("ledgerYear", String(now.getFullYear()));

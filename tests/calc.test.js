@@ -39,5 +39,38 @@ const b = C.compute({ insured: true, emp: "general", age40: false, deps: 0 }, { 
 assert.strictEqual(b.hStd, 1234000);
 assert.strictEqual(b.pStd, 1234000 > 1500000 ? 1500000 : 1234000);
 
+// 標準報酬月額の手動指定（簡易計算）：空欄は等級表、指定があればその額
+{
+  const base = { insured: true, emp: "general", age40: false, deps: 0, pref: "tokyo" };
+  const rec = { ym: "2026-11", kind: "salary", basic: 300000 };
+  const auto = C.compute(base, rec, R);
+  const manual = C.compute({ ...base, hStdOverride: "200000", pStdOverride: "240000" }, rec, R);
+  assert.strictEqual(auto.hStd, 300000);
+  assert.strictEqual(manual.hStd, 200000);
+  assert.strictEqual(manual.pStd, 240000);
+  // 健康保険料（折半）＋子ども・子育て支援金（折半）。2026-11 は支援金の対象月
+  assert.strictEqual(manual.health, Math.round(200000 * R.health.byPrefecture.tokyo / 100 / 2) + Math.round(200000 * R.health.childSupportPercent / 100 / 2));
+}
+
+// 標準報酬月額の履歴：適用開始年月の前は自動、以後は履歴の指定を使う
+{
+  const emp = { insured: true, emp: "general", age40: false, deps: 0, pref: "tokyo",
+    stdHistory: [{ from: "2026-04", hStd: 200000, pStd: 200000 }, { from: "2026-10", hStd: "", pStd: "" }] };
+  const at = (ym) => C.compute(emp, { ym, kind: "salary", basic: 300000 }, R).hStd;
+  assert.strictEqual(at("2026-03"), 300000, "履歴より前は自動");
+  assert.strictEqual(at("2026-04"), 200000, "開始月から指定");
+  assert.strictEqual(at("2026-09"), 200000, "次の履歴まで指定が続く");
+  assert.strictEqual(at("2026-10"), 300000, "空欄の履歴は自動に戻る");
+}
+
+// 給与記録の月ごとの指定は、社員の履歴より優先される（空欄なら履歴のまま）
+{
+  const emp = { insured: true, emp: "general", age40: false, deps: 0, pref: "tokyo",
+    stdHistory: [{ from: "2026-04", hStd: 200000, pStd: 200000 }] };
+  const monthly = (hStd) => C.compute(emp, { ym: "2026-11", kind: "salary", basic: 300000, hStd }, R).hStd;
+  assert.strictEqual(monthly(""), 200000, "空欄は履歴");
+  assert.strictEqual(monthly("260000"), 260000, "この月の指定が優先");
+}
+
 console.log("calc tests passed");
 console.log(JSON.stringify(r, null, 1));
