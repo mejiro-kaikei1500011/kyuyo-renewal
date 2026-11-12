@@ -55,6 +55,11 @@
   const fmt = (v) => Math.round(Number(v) || 0).toLocaleString("ja-JP");
   const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   function ymLabel(ym) { const [y, m] = ym.split("-"); return `${y}年${Number(m)}月`; }
+  // 翌月払いの社員は、支払月の前月を勤務月として表示する（記録は支払月のキーのまま）
+  function payLabel(emp, ym) {
+    if (emp && emp.payLag === 1) return `${ymLabel(prevYm(ym))}分（${ymLabel(ym)}支払）`;
+    return ymLabel(ym);
+  }
   function prevYm(ym) {
     const [y, m] = ym.split("-").map(Number);
     const d = new Date(Date.UTC(y, m - 2, 1));
@@ -315,7 +320,7 @@
 
     $("payslip").innerHTML = `
 <div class="title-row">
-  <span class="ym">${ymLabel(ym)}</span>
+  <span class="ym">${esc(payLabel(emp, ym))}</span>
   <span class="ttl">${isBonus ? "賞与明細書" : "給料明細書"}</span>
   <span></span>
 </div>
@@ -396,7 +401,7 @@
   function slipText(emp, ym, kind, r) {
     const isBonus = kind === "bonus";
     const lines = [];
-    lines.push(`${ymLabel(ym)} ${isBonus ? "賞与明細書" : "給料明細書"}`);
+    lines.push(`${payLabel(emp, ym)} ${isBonus ? "賞与明細書" : "給料明細書"}`);
     lines.push(`${emp.company || ""} ${emp.name} 様`.trim());
     lines.push("");
     if (isBonus) lines.push(`賞与額：${fmt(r.basic)}円`);
@@ -428,7 +433,7 @@
     if (!emp || !ym) { setShareMsg("社員と対象年月を選んでください。"); return null; }
     const kind = val("payKind");
     const r = C.compute(emp, Object.assign({}, EMPTY_REC, readRecFromForm(), { ym, kind }), R);
-    return { emp, ym, kind, r, subject: `${ymLabel(ym)} ${kind === "bonus" ? "賞与明細" : "給与明細"}（${emp.name}）`, body: slipText(emp, ym, kind, r) };
+    return { emp, ym, kind, r, subject: `${payLabel(emp, ym)} ${kind === "bonus" ? "賞与明細" : "給与明細"}（${emp.name}）`, body: slipText(emp, ym, kind, r) };
   }
   function setShareMsg(msg) { $("shareMsg").textContent = msg; }
   // 明細の本文を画面に表示し、コピーできるようにする（送信機能は持たない）
@@ -496,6 +501,7 @@
     setVal("empWithholding", "kou");
     setVal("empPref", "tokyo");
     setVal("empEmail", "");
+    setVal("empPayLag", "0");
     setVal("stdFrom", "");
     updateRateHint();
     renderStdList(null);
@@ -516,6 +522,7 @@
       pref: val("empPref"),
       customHealthRate: (db.employees.find((x) => x.id === id) || {}).customHealthRate || "",
       email: val("empEmail").trim(),
+      payLag: val("empPayLag") === "1" ? 1 : 0,
       stdHistory: (db.employees.find((x) => x.id === id) || {}).stdHistory || []
     };
     const idx = db.employees.findIndex((e) => e.id === id);
@@ -547,6 +554,7 @@
       setVal("empWithholding", e.withholdingCol === "otsu" ? "otsu" : "kou");
       setVal("empPref", e.pref || "tokyo");
       setVal("empEmail", e.email || "");
+      setVal("empPayLag", e.payLag === 1 ? "1" : "0");
       updateRateHint();
       renderStdList(e);
     }

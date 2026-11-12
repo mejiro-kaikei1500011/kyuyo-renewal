@@ -208,6 +208,12 @@
           <p class="hint" id="stdHint"></p>
           <ul id="stdList" class="std-list"></ul>
         </div>
+        <label>支払いの時期
+          <select id="empPayLag">
+            <option value="0">当月払い（勤務月と同じ月に支払う）</option>
+            <option value="1">翌月払い（勤務月の翌月に支払う）</option>
+          </select>
+        </label>
         <label>メールアドレス（送信先・任意）<input type="email" id="empEmail" placeholder="例：taro@example.com"></label>
         <div class="actions">
           <button type="submit" class="primary">保存</button>
