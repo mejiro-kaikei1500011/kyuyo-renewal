@@ -48,6 +48,18 @@
           </label>
         </div>
         <div id="salaryFields">
+          <div id="hourlyFields" class="dyn-section hidden">
+            <div class="dyn-head"><span>アルバイトの時給計算</span></div>
+            <div class="row">
+              <label>時給（アルバイト）<input type="text" inputmode="numeric" id="hourly" placeholder="0"></label>
+              <label>残業時給<input type="text" inputmode="numeric" id="otHourly" placeholder="0"></label>
+            </div>
+            <div class="row">
+              <label>残業時間数<input type="text" inputmode="numeric" id="otHours" placeholder="0"></label>
+              <label>&nbsp;</label>
+            </div>
+            <p class="hint">基本給＝時給×労働時間数（残業を除く）。時間外手当＝残業時給×残業時間数×1.25（法定の割増）。欄は直接直すこともできます。</p>
+          </div>
           <div class="row">
             <label>基本給<input type="text" inputmode="numeric" id="basic" placeholder="0"></label>
             <label>時間外手当<input type="text" inputmode="numeric" id="overtime" placeholder="0"></label>
@@ -74,17 +86,6 @@
           <div class="row">
             <label>労働日数<input type="text" inputmode="numeric" id="days" placeholder="0"></label>
             <label>労働時間数<input type="text" inputmode="numeric" id="hours" placeholder="0"></label>
-          </div>
-          <div id="hourlyFields" class="hidden">
-            <div class="row">
-              <label>時給（アルバイト）<input type="text" inputmode="numeric" id="hourly" placeholder="0"></label>
-              <label>残業時給<input type="text" inputmode="numeric" id="otHourly" placeholder="0"></label>
-            </div>
-            <div class="row">
-              <label>残業時間数<input type="text" inputmode="numeric" id="otHours" placeholder="0"></label>
-              <label>&nbsp;</label>
-            </div>
-            <p class="hint">基本給＝時給×労働時間数（残業を除く）。時間外手当＝残業時給×残業時間数×1.25（法定の割増）。欄は直接直すこともできます。</p>
           </div>
         </div>
         <div id="bonusFields" class="hidden">
