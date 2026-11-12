@@ -85,7 +85,7 @@ ok("bonus hides allowance rows", $("allowRows").children.length === 0);
 $("empName").value = "テスト 花子";
 $("empPref").value = "kanagawa";
 $("empPref").dispatchEvent(new w.Event("change", { bubbles: true }));
-ok("kanagawa hides custom rate (known)", $("empCustomRateLabel").classList.contains("hidden"));
+ok("kanagawa shows known rate hint", $("empRateHint").textContent.includes("9.92"));
 $("empForm").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
 ok("employee added", JSON.parse(w.localStorage.getItem("kyuyo-renewal-v1")).employees.length === 2);
 ok("employee save message shown", $("empMsg").textContent.includes("保存しました") && !$("empMsg").classList.contains("error"));

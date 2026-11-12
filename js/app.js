@@ -444,13 +444,10 @@
   function updateRateHint() {
     const p = val("empPref");
     const table = R.health.byPrefecture || {};
-    const custom = p === "other" || table[p] === null || table[p] === undefined;
-    $("empCustomRateLabel").classList.toggle("hidden", !custom);
-    let msg;
-    if (!custom) msg = `${PREF_LABEL[p]}の協会けんぽ料率（${table[p]}%・令和8年3月分から）を使います。`;
-    else if (p === "other") msg = "その他の都道府県は、加入先の支部の料率を手入力してください。未入力の場合は全国平均（9.90%）で計算します。";
-    else msg = `${PREF_LABEL[p]}の料率は確認中です。手入力してください。未入力の場合は全国平均（9.90%）で計算します。`;
-    $("empRateHint").textContent = msg;
+    const known = table[p] !== null && table[p] !== undefined && p !== "other";
+    $("empRateHint").textContent = known
+      ? `${PREF_LABEL[p]}の協会けんぽ料率（${table[p]}%・令和8年3月分から）を使います。`
+      : "この都道府県の料率は表にないため、全国平均（9.90%）で計算します。";
   }
   function renderEmpList() {
     if (!db.employees.length) {
@@ -480,7 +477,6 @@
     setVal("empDeps", "0");
     setVal("empWithholding", "kou");
     setVal("empPref", "tokyo");
-    setVal("empCustomRate", "");
     setVal("empEmail", "");
     setVal("stdFrom", "");
     updateRateHint();
@@ -499,7 +495,7 @@
       deps: Number(val("empDeps")) || 0,
       withholdingCol: val("empWithholding") === "otsu" ? "otsu" : "kou",
       pref: val("empPref"),
-      customHealthRate: val("empCustomRate"),
+      customHealthRate: (db.employees.find((x) => x.id === id) || {}).customHealthRate || "",
       email: val("empEmail").trim(),
       stdHistory: (db.employees.find((x) => x.id === id) || {}).stdHistory || []
     };
@@ -530,7 +526,6 @@
       setVal("empDeps", String(e.deps || 0));
       setVal("empWithholding", e.withholdingCol === "otsu" ? "otsu" : "kou");
       setVal("empPref", e.pref || "tokyo");
-      setVal("empCustomRate", e.customHealthRate || "");
       setVal("empEmail", e.email || "");
       updateRateHint();
       renderStdList(e);
@@ -697,7 +692,7 @@
       age40: $("qAge40").checked,
       deps: Number(val("qDeps")) || 0,
       pref: val("qPref"),
-      customHealthRate: val("qCustomRate"),
+      customHealthRate: "",
       withholdingCol: val("qWithholding") === "otsu" ? "otsu" : "kou",
       hStdOverride: val("qHStd"),
       pStdOverride: val("qPStd")
@@ -722,12 +717,10 @@
   function updateQuickRate() {
     const p = val("qPref");
     const table = R.health.byPrefecture || {};
-    const custom = p === "other" || table[p] === null || table[p] === undefined;
-    $("qCustomRateLabel").classList.toggle("hidden", !custom);
-    let msg;
-    if (!custom) msg = `${PREF_LABEL[p]}の協会けんぽ料率（${table[p]}%・令和8年3月分から）を使います。`;
-    else msg = "この都道府県の料率は手入力してください。未入力の場合は全国平均（9.90%）で計算します。";
-    $("qRateHint").textContent = msg;
+    const known = table[p] !== null && table[p] !== undefined && p !== "other";
+    $("qRateHint").textContent = known
+      ? `${PREF_LABEL[p]}の協会けんぽ料率（${table[p]}%・令和8年3月分から）を使います。`
+      : "この都道府県の料率は表にないため、全国平均（9.90%）で計算します。";
   }
   function renderQuick() {
     const emp = quickEmp();
