@@ -456,7 +456,7 @@
     }
     $("empList").innerHTML = db.employees.map((e) => `
 <tr>
-  <td>${esc(e.name)}</td>
+  <td>${esc(e.name)}${e.workType === "part" ? "（アルバイト）" : ""}</td>
   <td>${esc(e.company)}</td>
   <td>${e.insured ? "加入・" + esc(PREF_LABEL[e.pref] || "東京都") : "未加入"}</td>
   <td>${esc(C.EMP_LABEL[e.emp] || "未加入")}</td>
@@ -471,6 +471,7 @@
     $("empFormTitle").textContent = "社員を追加";
     setVal("empName", "");
     setVal("empCompany", "");
+    setVal("empType", "employee");
     $("empInsured").checked = true;
     setVal("empEmp", "none");
     $("empAge40").checked = false;
@@ -489,6 +490,7 @@
       id,
       name: val("empName").trim(),
       company: val("empCompany").trim(),
+      workType: val("empType") === "part" ? "part" : "employee",
       insured: $("empInsured").checked,
       emp: val("empEmp"),
       age40: $("empAge40").checked,
@@ -520,6 +522,7 @@
       $("empFormTitle").textContent = "社員を編集";
       setVal("empName", e.name);
       setVal("empCompany", e.company);
+      setVal("empType", e.workType === "part" ? "part" : "employee");
       $("empInsured").checked = !!e.insured;
       setVal("empEmp", e.emp);
       $("empAge40").checked = !!e.age40;

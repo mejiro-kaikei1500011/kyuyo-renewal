@@ -153,6 +153,12 @@
         <input type="hidden" id="empId">
         <label>氏名<input type="text" id="empName" required></label>
         <label>会社名<input type="text" id="empCompany"></label>
+        <label>区分
+          <select id="empType">
+            <option value="employee">社員</option>
+            <option value="part">アルバイト</option>
+          </select>
+        </label>
         <label class="check"><input type="checkbox" id="empInsured" checked> 社会保険に加入（健康保険・厚生年金）</label>
         <label>事業所の都道府県（健康保険料率）
           <select id="empPref"></select>
