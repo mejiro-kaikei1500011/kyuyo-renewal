@@ -43,7 +43,7 @@ main { max-width: 1200px; margin: 0 auto; padding: 16px; }
 label { display: block; margin: 8px 0; font-size: 14px; }
 label input, label select {
   display: block; width: 100%; margin-top: 4px; padding: 7px 9px;
-  border: 1px solid #b9c6b2; border-radius: 6px; font: inherit; background: #fff;
+  border: 1px solid #7a8a70; border-radius: 6px; font: inherit; background: #fff;
 }
 label.check { display: flex; gap: 8px; align-items: center; }
 label.check input { width: auto; margin: 0; }
@@ -109,7 +109,7 @@ table.list th, table.list td { border-bottom: 1px solid #e3e9de; padding: 6px; t
 .dyn-head button { white-space: nowrap; flex: 0 0 auto; }
 .dyn-row { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) auto auto; gap: 6px; margin-bottom: 6px; align-items: center; }
 .dyn-row.no-taxable { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) auto; }
-.dyn-row input, .dyn-row select { padding: 6px; border: 1px solid #b9c6b2; border-radius: 6px; font: inherit; min-width: 0; width: 100%; }
+.dyn-row input, .dyn-row select { padding: 6px; border: 1px solid #7a8a70; border-radius: 6px; font: inherit; min-width: 0; width: 100%; }
 .dyn-row .dyn-taxable { width: auto; }
 .dyn-del { padding: 4px 8px; white-space: nowrap; }
 .dyn-fixed-name { font-size: 14px; padding: 6px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
