@@ -14,6 +14,7 @@
     <button class="tab active" data-tab="tab-pay" role="tab">給与明細</button>
     <button class="tab" data-tab="tab-emp" role="tab">社員</button>
     <button class="tab" data-tab="tab-ledger" role="tab">賃金台帳・振込・源泉票</button>
+    <button class="tab tab-quick" data-tab="tab-quick" role="tab">簡易計算</button>
   </nav>
   <div class="data-tools">
     <button id="exportBtn" type="button">データ書き出し</button>
@@ -46,9 +47,15 @@
             </select>
           </label>
         </div>
-        <p class="hint">基本給・時間外・通勤手当・不就労控除は、右の明細の枠の中で直接入力します。</p>
-
         <div id="salaryFields">
+          <div class="row">
+            <label>基本給<input type="text" inputmode="numeric" id="basic" placeholder="0"></label>
+            <label>時間外手当<input type="text" inputmode="numeric" id="overtime" placeholder="0"></label>
+          </div>
+          <div class="row">
+            <label>通勤手当<input type="text" inputmode="numeric" id="commute" placeholder="0"></label>
+            <label>不就労控除<input type="text" inputmode="numeric" id="absence" placeholder="0"></label>
+          </div>
           <div class="dyn-section">
             <div class="dyn-head"><span>手当</span><button type="button" id="addAllowBtn">＋ その他手当</button></div>
             <div id="allowRows"></div>
@@ -65,6 +72,7 @@
           </div>
         </div>
         <div id="bonusFields" class="hidden">
+          <label>賞与額<input type="text" inputmode="numeric" id="bonusAmount" placeholder="0"></label>
           <label>参考：通常の月額総支給（所得税の計算用）<input type="text" inputmode="numeric" id="refMonthly" placeholder="0"></label>
         </div>
 
@@ -92,6 +100,39 @@
   </section>
 
   <!-- 社員 -->
+  <section id="tab-quick" class="tab-panel hidden">
+    <div class="grid2">
+      <form id="quickForm" class="card" autocomplete="off">
+        <h2>簡易計算</h2>
+        <p class="hint">社員を登録せずに、社会保険料・所得税・手取りを計算します。入力内容は保存されず、ページを閉じると消えます。</p>
+        <label>対象年月（支払月）<input type="month" id="qYm"></label>
+        <label class="check"><input type="checkbox" id="qInsured" checked> 社会保険に加入（健康保険・厚生年金）</label>
+        <label>雇用保険
+          <select id="qEmp">
+            <option value="none">未加入</option>
+            <option value="general">一般の事業</option>
+            <option value="agri">農林水産・清酒製造の事業</option>
+            <option value="construction">建設の事業</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="qAge40"> 40歳以上（介護保険あり）</label>
+        <label>都道府県（健康保険料率）<select id="qPref"></select></label>
+        <label id="qCustomRateLabel">健康保険料率（％・手入力）<input type="text" inputmode="decimal" id="qCustomRate" placeholder="例：9.90"></label>
+        <p class="hint" id="qRateHint"></p>
+        <label>扶養人数（甲欄用）<select id="qDeps"></select></label>
+        <label>源泉徴収票の区分<select id="qWithholding"><option value="kou">甲欄</option><option value="otsu">乙欄</option></select></label>
+        <label>基本給<input type="text" inputmode="numeric" id="qBasic" placeholder="0"></label>
+        <label>時間外手当<input type="text" inputmode="numeric" id="qOvertime" placeholder="0"></label>
+        <label>通勤手当（全額）<input type="text" inputmode="numeric" id="qCommute" placeholder="0"></label>
+        <label>不就労控除<input type="text" inputmode="numeric" id="qAbsence" placeholder="0"></label>
+        <label>課税の手当（合計）<input type="text" inputmode="numeric" id="qTaxAllow" placeholder="0"></label>
+        <label>非課税の手当（合計）<input type="text" inputmode="numeric" id="qNonTaxAllow" placeholder="0"></label>
+        <label>その他控除（社宅家賃など・社会保険料の対象外）<input type="text" inputmode="numeric" id="qDed" placeholder="0"></label>
+      </form>
+      <div class="card" id="quickOut"></div>
+    </div>
+  </section>
+
   <section id="tab-emp" class="tab-panel hidden">
     <div class="grid-2">
       <form id="empForm" class="card" autocomplete="off">

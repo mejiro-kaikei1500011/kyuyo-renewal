@@ -22,7 +22,7 @@
   PREF_LABEL.other = "その他";
 
   // 手当・その他控除の固定行
-  const FIXED_ALLOW = ["役職手当", "資格手当", "家族手当", "住宅手当", "皆勤手当"];
+  const FIXED_ALLOW = ["役職手当", "資格手当"];
   const FIXED_DED = ["社宅家賃"];
 
   // ---------- データ保存（ブラウザ内 localStorage） ----------
@@ -109,7 +109,9 @@
       const found = saved.find((r) => r.name === name) || { name, amount: "", taxable: true };
       addRow("allowRows", { name, amount: found.amount, taxable: found.taxable }, true, true);
     });
-    saved.filter((r) => !FIXED_ALLOW.includes(r.name)).forEach((r) => addRow("allowRows", r, true, false));
+    // 金額が空の行（固定から外した手当の空欄など）は表示しない。金額が入っている行は残す
+    saved.filter((r) => !FIXED_ALLOW.includes(r.name) && String(r.amount ?? "").trim() !== "")
+      .forEach((r) => addRow("allowRows", r, true, false));
   }
   function setDedRows(rows) {
     $("dedRows").innerHTML = "";
@@ -148,6 +150,11 @@
   // 記録の値を入力欄（左の欄）へ反映する。明細の枠は buildFrame が作る
   function fillLeftForm(rec) {
     const isBonus = val("payKind") === "bonus";
+    setVal("basic", isBonus ? "" : rec.basic);
+    setVal("bonusAmount", isBonus ? rec.basic : "");
+    setVal("overtime", rec.overtime);
+    setVal("commute", rec.commute);
+    setVal("absence", rec.absence);
     setVal("days", rec.days);
     setVal("hours", rec.hours);
     setVal("refMonthly", rec.refMonthly);
@@ -189,7 +196,7 @@
       carried = prior ? prior.ym : null;
     }
     fillLeftForm(rec);
-    refresh(Object.assign({}, rec, { ym, kind }), false);
+    refresh(Object.assign({}, rec, { ym, kind }));
     setShareMsg(carried ? `${ymLabel(carried)}の入力を引き継いでいます。変更があれば修正してください。` : "");
   }
 
@@ -197,15 +204,14 @@
   function onPayInput(ev) {
     const emp = currentEmp();
     const ym = val("payYm");
-    if (!emp || !ym) { refresh(readRecFromForm(), false); return; }
-    const fromSlip = !!(ev && ev.target && ev.target.closest && ev.target.closest("#payslip"));
+    if (!emp || !ym) { refresh(readRecFromForm()); return; }
     const rec = readRecFromForm();
     db.records[emp.id] = db.records[emp.id] || {};
     const key = recKey(ym, rec.kind);
     if (hasAnyValue(rec)) db.records[emp.id][key] = rec;
     else delete db.records[emp.id][key];
     saveDb();
-    refresh(rec, fromSlip);
+    refresh(rec, false);
   }
   function onSelectChange() {
     loadCurrentRecord();
@@ -218,7 +224,7 @@
   }
 
   // ---------- 給与明細（枠の作成・数字の更新） ----------
-  function refresh(rec, fromSlip) {
+  function refresh(rec) {
     updateRatesInfo();
     const emp = currentEmp();
     const ym = val("payYm");
@@ -230,14 +236,11 @@
     }
     const full = Object.assign({}, EMPTY_REC, rec, { ym, kind });
     const res = C.compute(emp, full, R);
-    if (!fromSlip || !$("payslip").querySelector("[data-k]")) buildFrame(emp, ym, kind, full, res);
+    buildFrame(emp, ym, kind, full, res);
     updateValues(res);
     $("breakdown").innerHTML = breakdownHtml(emp, res);
   }
 
-  function inputHtml(id, v) {
-    return `<input type="text" inputmode="numeric" id="${id}" class="slip-input" value="${esc(v)}" placeholder="0">`;
-  }
   function spanHtml(k) { return `<span data-k="${k}">0</span>`; }
 
   function gridHtml(side, items) {
@@ -262,12 +265,12 @@
     const isBonus = kind === "bonus";
     const pay = [];
     if (isBonus) {
-      pay.push({ label: "賞与額", html: inputHtml("bonusAmount", rec.basic) });
+      pay.push({ label: "賞与額", html: spanHtml("basic") });
     } else {
-      pay.push({ label: "基本給", html: inputHtml("basic", rec.basic) });
-      pay.push({ label: "時間外手当", html: inputHtml("overtime", rec.overtime) });
-      pay.push({ label: "通勤手当(非)", html: inputHtml("commute", rec.commute) });
-      pay.push({ label: "不就労控除", html: inputHtml("absence", rec.absence) });
+      pay.push({ label: "基本給", html: spanHtml("basic") });
+      pay.push({ label: "時間外手当", html: spanHtml("overtime") });
+      pay.push({ label: "通勤手当(非)", html: spanHtml("commute") });
+      pay.push({ label: "不就労控除", html: spanHtml("absence") });
       res.allowances.forEach((a, i) => pay.push({ label: `${a.name || "手当"}${a.taxable ? "" : "(非)"}`, html: spanHtml("allow" + i) }));
     }
     pay.push({ label: "総支給額", html: spanHtml("gross"), strong: true });
@@ -305,6 +308,10 @@
   // 計算結果を枠の数字へ反映する
   function updateValues(res) {
     const set = (k, v) => { const el = document.querySelector(`[data-k="${k}"]`); if (el) el.textContent = fmt(v); };
+    set("basic", res.basic);
+    set("overtime", res.overtime);
+    set("commute", res.commute);
+    set("absence", res.absence);
     set("gross", res.gross);
     set("health", res.health);
     set("care", res.care);
@@ -658,6 +665,82 @@
     reader.readAsText(file);
   }
 
+  // ---------- 簡易計算（社員登録・保存なし） ----------
+  function quickEmp() {
+    return {
+      insured: $("qInsured").checked,
+      emp: val("qEmp"),
+      age40: $("qAge40").checked,
+      deps: Number(val("qDeps")) || 0,
+      pref: val("qPref"),
+      customHealthRate: val("qCustomRate"),
+      withholdingCol: val("qWithholding") === "otsu" ? "otsu" : "kou"
+    };
+  }
+  function quickRec() {
+    return {
+      ym: val("qYm"),
+      kind: "salary",
+      basic: val("qBasic"),
+      overtime: val("qOvertime"),
+      commute: val("qCommute"),
+      absence: val("qAbsence"),
+      allowances: [
+        { name: "課税の手当", amount: val("qTaxAllow"), taxable: true },
+        { name: "非課税の手当", amount: val("qNonTaxAllow"), taxable: false }
+      ],
+      deductions: [{ name: "その他控除", amount: val("qDed") }],
+      refMonthly: ""
+    };
+  }
+  function updateQuickRate() {
+    const p = val("qPref");
+    const table = R.health.byPrefecture || {};
+    const custom = p === "other" || table[p] === null || table[p] === undefined;
+    $("qCustomRateLabel").classList.toggle("hidden", !custom);
+    let msg;
+    if (!custom) msg = `${PREF_LABEL[p]}の協会けんぽ料率（${table[p]}%・令和8年3月分から）を使います。`;
+    else msg = "この都道府県の料率は手入力してください。未入力の場合は全国平均（9.90%）で計算します。";
+    $("qRateHint").textContent = msg;
+  }
+  function renderQuick() {
+    const emp = quickEmp();
+    const r = C.compute(emp, quickRec(), R);
+    const row = (a, b, strong) => `<tr${strong ? ' class="strong"' : ""}><td>${a}</td><td class="num">${b}</td></tr>`;
+    $("quickOut").innerHTML = `
+      <h2>計算結果（保存されません）</h2>
+      <table class="slip-sum">
+        ${row("総支給額", fmt(r.gross) + "円")}
+        ${row("課税対象額", fmt(r.taxableGross) + "円")}
+        ${row("社会保険料（健康・介護・厚生年金）", fmt(r.health + r.care + r.pension) + "円")}
+        ${row("雇用保険料", fmt(r.employment) + "円")}
+        ${row("所得税（源泉徴収）", fmt(r.incomeTax) + "円")}
+        ${row("その他控除", fmt(r.otherDeductTotal) + "円")}
+        ${row("控除計", fmt(r.deductionTotal) + "円")}
+        ${row("差引支給額（手取り）", fmt(r.net) + "円", true)}
+      </table>
+      ${breakdownHtml(emp, r)}
+      <p class="note">※簡易計算の結果です。社会保険料・所得税は概算で、年末調整や各種控除は含みません。</p>`;
+  }
+  function initQuick() {
+    $("qPref").innerHTML = PREFS.map(([k, l]) => `<option value="${k}">${l}</option>`).join("") + '<option value="other">その他（手入力）</option>';
+    const deps = [];
+    for (let i = 0; i <= 7; i++) deps.push(`<option value="${i}">${i}人</option>`);
+    $("qDeps").innerHTML = deps.join("");
+    setVal("qPref", "tokyo");
+    const now = new Date();
+    setVal("qYm", `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+    updateQuickRate();
+    renderQuick();
+    const onQuick = (ev) => {
+      if (ev.target.id === "qPref") updateQuickRate();
+      renderQuick();
+    };
+    $("quickForm").addEventListener("input", onQuick);
+    $("quickForm").addEventListener("change", onQuick);
+    $("quickForm").addEventListener("submit", (ev) => { ev.preventDefault(); renderQuick(); });
+  }
+
   // ---------- 画面切替・初期化 ----------
   function showTab(id) {
     document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === id));
@@ -682,6 +765,7 @@
     const now = new Date();
     const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
     fillStaticSelects();
+    initQuick();
     setVal("payYm", ym);
     setVal("transferYm", ym);
     setVal("ledgerYear", String(now.getFullYear()));
@@ -693,10 +777,7 @@
       if (ev.target.id === "paySelect" || ev.target.id === "payYm" || ev.target.id === "payKind") { onSelectChange(); return; }
       onPayInput(ev);
     };
-    ["input", "change"].forEach((type) => {
-      $("payForm").addEventListener(type, onAnyInput);
-      $("payslip").addEventListener(type, onAnyInput);
-    });
+    ["input", "change"].forEach((type) => $("payForm").addEventListener(type, onAnyInput));
     $("allowRows").addEventListener("click", onRowsClick);
     $("dedRows").addEventListener("click", onRowsClick);
     $("addAllowBtn").addEventListener("click", () => { addRow("allowRows", null, true, false); onPayInput(null); });
@@ -710,7 +791,7 @@
       saveDb();
       loadCurrentRecord();
     });
-    $("printPayBtn").addEventListener("click", () => printTarget("pay", () => refresh(readRecFromForm(), false)));
+    $("printPayBtn").addEventListener("click", () => printTarget("pay", () => refresh(readRecFromForm())));
     $("mailPayBtn").addEventListener("click", sendMail);
     $("linePayBtn").addEventListener("click", sendLine);
 

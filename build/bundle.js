@@ -12,7 +12,7 @@ const seed = `<script>
   var db = { employees: [{ id:"sample1", name:"山田 太郎（サンプル）", company:"サンプル株式会社", insured:true, emp:"general", age40:false, deps:1, pref:"tokyo", customHealthRate:"", email:"" }],
     records: { sample1: {} } };
   db.records.sample1[ym + "|salary"] = { kind:"salary", basic:"300000", overtime:"10000", commute:"12000", absence:"", days:"", hours:"",
-    allowances:[{name:"役職手当",amount:"20000",taxable:true},{name:"資格手当",amount:"",taxable:true},{name:"家族手当",amount:"",taxable:true},{name:"住宅手当",amount:"",taxable:true},{name:"皆勤手当",amount:"",taxable:true}],
+    allowances:[{name:"役職手当",amount:"20000",taxable:true},{name:"資格手当",amount:"",taxable:true}],
     deductions:[{name:"社宅家賃",amount:"30000"}], residentOverride:"", refMonthly:"" };
   localStorage.setItem("kyuyo-renewal-v1", JSON.stringify(db));
 })();

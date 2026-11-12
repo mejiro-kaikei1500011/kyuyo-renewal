@@ -139,3 +139,16 @@ table.list th, table.list td { border-bottom: 1px solid #e3e9de; padding: 6px; t
 .small-notice { font-size: 11px; line-height: 1.5; color: #555; }
 .small-notice ul { margin: 4px 0 0; padding-left: 1.2em; }
 .small-notice li { margin: 2px 0; }
+
+/* 簡易計算 */
+.grid2 { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 800px) { .grid2 { grid-template-columns: 1fr; } }
+.slip-sum { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+.slip-sum td { padding: 6px 4px; border-bottom: 1px solid #ddd; }
+.slip-sum td.num { text-align: right; white-space: nowrap; }
+.slip-sum tr.strong td { font-weight: 700; font-size: 1.05em; }
+
+/* 簡易計算タブは右端に、色を変えて置く */
+.tabs { flex: 1; }
+.tab.tab-quick { margin-left: auto; background: #b7791f; border-color: #b7791f; }
+.tab.tab-quick.active { background: #fff; color: #b7791f; }

@@ -17,6 +17,7 @@ const ok = (name, cond) => console.log((cond ? "PASS " : "FAIL ") + name);
 
 // 1. 初期表示
 ok("prefecture options = 47 + other", $("empPref").options.length === 48);
+ok("payslip has no input boxes (results only)", w.document.querySelectorAll("#payslip input").length === 0);
 ok("payslip net shown", /円$/.test(w.document.querySelector('[data-k="net"]').textContent));
 ok("net for sample = 256,484 (seed, 月額表・扶養1)", w.document.querySelector('[data-k="net"]').textContent === "256,484円");
 
@@ -108,5 +109,16 @@ console.log("errors:", errors.length ? errors : "none");
   ok("next month shows carry message", $("shareMsg").textContent.includes("引き継いで"));
   $("payYm").value = cur;
   $("payYm").dispatchEvent(new w.Event("change", { bubbles: true }));
+}
+// 簡易計算：社員を登録せず計算でき、保存されないこと
+{
+  const before = w.localStorage.getItem("kyuyo-renewal-v1");
+  $("qBasic").value = "300000";
+  $("qBasic").dispatchEvent(new w.Event("input", { bubbles: true }));
+  const out = $("quickOut").textContent;
+  ok("quick calc shows net", out.includes("差引支給額") && /差引支給額（手取り）\s*[0-9,]+円/.test(out));
+  ok("quick calc does not save", w.localStorage.getItem("kyuyo-renewal-v1") === before);
+  $("qBasic").value = "";
+  $("qBasic").dispatchEvent(new w.Event("input", { bubbles: true }));
 }
 console.log("errors (final):", errors.length ? errors : "none");
