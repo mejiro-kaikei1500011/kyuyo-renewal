@@ -91,6 +91,11 @@
           <button type="button" id="linePayBtn">LINEで送る</button>
         </div>
         <p class="hint" id="shareMsg"></p>
+        <div id="sharePanel" class="hidden">
+          <p class="hint">メールが開かない場合は、下の文章をコピーして、メールや LINE に貼り付けてください。</p>
+          <textarea id="shareText" rows="8" readonly style="width:100%"></textarea>
+          <div class="actions"><button type="button" id="copyShareBtn">本文をコピー</button></div>
+        </div>
         <p class="hint">計算結果は概算です。確定値は給与計算ソフト・税務署・自治体の公表値で必ずご確認ください。</p>
       </form>
 
