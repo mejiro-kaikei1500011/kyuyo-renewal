@@ -52,11 +52,11 @@
             <div class="dyn-head"><span>アルバイトの時給計算</span></div>
             <div class="row">
               <label>時給（アルバイト）<input type="text" inputmode="numeric" id="hourly" placeholder="0"></label>
-              <label>残業時給<input type="text" inputmode="numeric" id="otHourly" placeholder="0"></label>
+              <div id="hoursSlotPart"></div>
             </div>
             <div class="row">
+              <label>残業時給（アルバイト）<input type="text" inputmode="numeric" id="otHourly" placeholder="0"></label>
               <label>残業時間数<input type="text" inputmode="numeric" id="otHours" placeholder="0"></label>
-              <div id="hoursSlotPart"></div>
             </div>
             <p class="hint">基本給＝時給×労働時間数（残業を除く）。時間外手当＝残業時給×残業時間数×1.25（法定の割増）。欄は直接直すこともできます。</p>
           </div>
