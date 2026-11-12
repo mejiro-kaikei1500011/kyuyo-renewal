@@ -322,6 +322,7 @@
 
     const ded = [
       { label: "健康保険", html: spanHtml("health") },
+      { label: "子育て支援金", html: spanHtml("childSupport") },
       { label: "介護保険", html: spanHtml("care") },
       { label: "厚生年金", html: spanHtml("pension") },
       { label: "雇用保険", html: spanHtml("employment") },
@@ -358,7 +359,8 @@
     set("commute", res.commute);
     set("absence", res.absence);
     set("gross", res.gross);
-    set("health", res.health);
+    set("health", res.healthOnly);
+    set("childSupport", res.child);
     set("care", res.care);
     set("pension", res.pension);
     set("employment", res.employment);
