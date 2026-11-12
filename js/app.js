@@ -129,7 +129,7 @@
     saved.filter((r) => !FIXED_DED.includes(r.name)).forEach((r) => addRow("dedRows", r, false, false));
   }
   function hasAnyValue(rec) {
-    return ["basic", "overtime", "commute", "absence", "days", "hours", "hourly", "refMonthly", "hStd", "pStd"]
+    return ["basic", "overtime", "commute", "absence", "days", "hours", "hourly", "otHourly", "otHours", "refMonthly", "hStd", "pStd"]
       .some((k) => String(rec[k] || "").trim() !== "")
       || rec.allowances.some((r) => String(r.amount).trim() !== "" || (!FIXED_ALLOW.includes(r.name) && r.name.trim() !== ""))
       || rec.deductions.some((r) => String(r.amount).trim() !== "" || (!FIXED_DED.includes(r.name) && r.name.trim() !== ""));
@@ -149,6 +149,8 @@
       days: val("days"),
       hours: val("hours"),
       hourly: kind === "bonus" ? "" : val("hourly"),
+      otHourly: kind === "bonus" ? "" : val("otHourly"),
+      otHours: kind === "bonus" ? "" : val("otHours"),
       allowances: kind === "bonus" ? [] : readRows("allowRows", true),
       deductions: readRows("dedRows", false),
       refMonthly: val("refMonthly"),
@@ -167,6 +169,8 @@
     setVal("days", rec.days);
     setVal("hours", rec.hours);
     setVal("hourly", rec.hourly);
+    setVal("otHourly", rec.otHourly);
+    setVal("otHours", rec.otHours);
     const emp = currentEmp();
     $("hourlyFields").classList.toggle("hidden", isBonus || !emp || emp.workType !== "part");
     setVal("refMonthly", rec.refMonthly);
@@ -177,7 +181,7 @@
     $("salaryFields").classList.toggle("hidden", isBonus);
     $("bonusFields").classList.toggle("hidden", !isBonus);
   }
-  const EMPTY_REC = { basic: "", overtime: "", commute: "", absence: "", days: "", hours: "", hourly: "", refMonthly: "", allowances: [], deductions: [] };
+  const EMPTY_REC = { basic: "", overtime: "", commute: "", absence: "", days: "", hours: "", hourly: "", otHourly: "", otHours: "", refMonthly: "", allowances: [], deductions: [] };
 
   // 同じ社員の直前の給与記録（賞与は引き継がない）
   function latestPriorRecord(empId, ym, kind) {
@@ -215,6 +219,12 @@
   }
 
   // 入力の変更：明細の枠の中で入力した場合は数字だけ更新し、左の欄の変更は枠を作り直す
+  // アルバイトの時給・残業から基本給と時間外手当を計算する（法定の割増率 1.25）
+  function autoHourlyPay() {
+    const n = (id) => Number(String(val(id)).replace(/,/g, "")) || 0;
+    if (n("hourly") > 0 && n("hours") > 0) setVal("basic", Math.round(n("hourly") * n("hours")));
+    if (n("otHourly") > 0 && n("otHours") > 0) setVal("overtime", Math.round(n("otHourly") * n("otHours") * 1.25));
+  }
   function onPayInput(ev) {
     const emp = currentEmp();
     const ym = val("payYm");
@@ -847,12 +857,7 @@
     // 入力欄は左の入力フォームと明細の枠の2か所にある（枠は form の外なので両方に付ける）
     const onAnyInput = (ev) => {
       if (ev.target.id === "paySelect" || ev.target.id === "payYm" || ev.target.id === "payKind") { onSelectChange(); return; }
-      if (ev.target.id === "hourly" || ev.target.id === "hours") {
-        // アルバイトは時給×労働時間数で基本給を自動計算する
-        const h = Number(String(val("hourly")).replace(/,/g, "")) || 0;
-        const hr = Number(String(val("hours")).replace(/,/g, "")) || 0;
-        if (h > 0 && hr > 0) setVal("basic", Math.round(h * hr));
-      }
+      if (["hourly", "hours", "otHourly", "otHours"].includes(ev.target.id)) autoHourlyPay();
       onPayInput(ev);
     };
     ["input", "change"].forEach((type) => $("payForm").addEventListener(type, onAnyInput));
