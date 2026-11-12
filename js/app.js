@@ -867,6 +867,10 @@
     $("empResetBtn").addEventListener("click", resetEmpForm);
     $("empList").addEventListener("click", onEmpListClick);
     $("empPref").addEventListener("change", updateRateHint);
+    // 区分を変えたとき、社会保険の初期値を合わせる（アルバイトは未加入が既定。必要なら手で変更できる）
+    $("empType").addEventListener("change", () => {
+      $("empInsured").checked = val("empType") !== "part";
+    });
 
     $("transferYm").addEventListener("change", renderTransfer);
     $("printTransferBtn").addEventListener("click", () => printTarget("transfer", renderTransfer));
