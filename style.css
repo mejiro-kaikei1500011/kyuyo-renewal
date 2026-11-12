@@ -1,0 +1,141 @@
+:root {
+  --ink: #1d2a1f;
+  --line: #7a8f73;
+  --head: #cfe0c4;
+  --accent: #2f6b3a;
+  --bg: #f5f7f3;
+  --card: #ffffff;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: "Yu Mincho", "游明朝", "YuMincho", "Hiragino Mincho ProN", "MS Mincho", "MS 明朝", serif;
+  color: var(--ink);
+  background: var(--bg);
+  font-size: 15px;
+}
+.hidden { display: none !important; }
+.site-header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  padding: 10px 18px; background: var(--accent); color: #fff;
+}
+.brand { font-weight: 700; font-size: 18px; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tab {
+  background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5);
+  padding: 6px 12px; border-radius: 6px; cursor: pointer;
+}
+.tab.active { background: #fff; color: var(--accent); }
+.data-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.file-btn, button {
+  font: inherit; padding: 6px 12px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+}
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+.notice { font-size: 13px; color: #4b5b45; background: #eef4ea; padding: 8px 12px; border-radius: 6px; }
+.card { background: var(--card); border-radius: 10px; padding: 16px; margin: 12px 0; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card h2 { margin: 0 0 12px; font-size: 17px; }
+.grid-2 { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 16px; align-items: start; }
+@media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+label { display: block; margin: 8px 0; font-size: 14px; }
+label input, label select {
+  display: block; width: 100%; margin-top: 4px; padding: 7px 9px;
+  border: 1px solid #b9c6b2; border-radius: 6px; font: inherit; background: #fff;
+}
+label.check { display: flex; gap: 8px; align-items: center; }
+label.check input { width: auto; margin: 0; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.align-end { align-self: end; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.hint { font-size: 12px; color: #607058; }
+table.list { width: 100%; border-collapse: collapse; font-size: 14px; }
+table.list th, table.list td { border-bottom: 1px solid #e3e9de; padding: 6px; text-align: left; }
+
+/* ===== 給与明細（印刷イメージに合わせたレイアウト） ===== */
+.payslip {
+  background: #fff; padding: 24px; border: 1px solid #999; border-radius: 4px;
+  font-size: 13px;
+}
+.payslip .title-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.payslip .ym { color: #1f4fa8; font-size: 15px; }
+.payslip .ttl { font-size: 22px; font-weight: 700; letter-spacing: .1em; }
+.payslip .who { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+.payslip table.slip { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.payslip table.slip td, .payslip table.slip th { border: 1px solid var(--line); padding: 6px 8px; }
+.payslip table.slip .side { width: 28px; background: var(--head); text-align: center; font-weight: 700; writing-mode: vertical-rl; }
+.payslip table.slip .lbl { background: var(--head); text-align: center; font-weight: 600; }
+.payslip table.slip .val { text-align: right; font-variant-numeric: tabular-nums; min-height: 28px; }
+.payslip table.slip .net-lbl { background: var(--head); text-align: right; font-weight: 700; padding-right: 16px; }
+.payslip table.slip .net-val { text-align: center; font-size: 18px; font-weight: 700; }
+.payslip .note { margin-top: 10px; font-size: 11px; color: #555; }
+/* 明細の入力欄はセルの幅いっぱいに収める（はみ出し防止） */
+.payslip table.slip td { overflow: hidden; overflow-wrap: anywhere; }
+.payslip .slip-input { display: block; width: 100%; box-sizing: border-box; min-width: 0; padding: 4px 6px; font-size: 14px; text-align: right; border: 1px solid #b8bfb0; border-radius: 4px; background: #fff; }
+.payslip table.slip .net-val { white-space: nowrap; }
+/* 携帯（幅が狭い画面）：列の文字と余白を詰める */
+@media (max-width: 600px) {
+  .payslip { padding: 10px 6px; }
+  .payslip .ttl { font-size: 16px; }
+  .payslip .ym { font-size: 13px; }
+  .payslip .who { font-size: 12px; }
+  .payslip table.slip td, .payslip table.slip th { padding: 4px 3px; }
+  .payslip table.slip .side { width: 22px; font-size: 13px; }
+  .payslip table.slip .lbl { font-size: 11px; line-height: 1.3; }
+  .payslip table.slip .val { font-size: 12px; }
+  .payslip table.slip .strong { font-size: 13px; }
+  .payslip .slip-input { font-size: 13px; padding: 3px 4px; }
+  .payslip table.slip .net-lbl { font-size: 12px; padding-right: 8px; }
+  .payslip table.slip .net-val { font-size: 14px; }
+  .payslip .note { font-size: 10px; }
+}
+
+/* ===== 台帳・振込（印刷） ===== */
+.ledger-table, .transfer-table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+.ledger-table th, .ledger-table td, .transfer-table th, .transfer-table td {
+  border: 1px solid var(--line); padding: 4px 6px; text-align: right; white-space: nowrap;
+}
+.ledger-table th, .transfer-table th { background: var(--head); text-align: center; }
+.ledger-table td.l, .transfer-table td.l { text-align: left; }
+.ledger-table tfoot td, .transfer-table tfoot td { font-weight: 700; background: #f2f6ef; }
+.print-area h3 { margin: 4px 0 10px; font-size: 16px; }
+.print-area.card { overflow-x: auto; }
+
+.dyn-section { margin: 10px 0; padding: 8px; border: 1px dashed #b9c6b2; border-radius: 8px; }
+.dyn-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+.dyn-head span { min-width: 0; }
+.dyn-head button { white-space: nowrap; flex: 0 0 auto; }
+.dyn-row { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) auto auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+.dyn-row.no-taxable { grid-template-columns: minmax(0,1.3fr) minmax(0,1fr) auto; }
+.dyn-row input, .dyn-row select { padding: 6px; border: 1px solid #b9c6b2; border-radius: 6px; font: inherit; min-width: 0; width: 100%; }
+.dyn-row .dyn-taxable { width: auto; }
+.dyn-del { padding: 4px 8px; white-space: nowrap; }
+.dyn-fixed-name { font-size: 14px; padding: 6px 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.payslip table.slip td.strong { font-weight: 700; }
+.breakdown { font-size: 13px; }
+.breakdown table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.breakdown td { border-bottom: 1px solid #e3e9de; padding: 4px; }
+
+/* ===== 印刷時：操作部分を隠し、印刷対象だけを出す ===== */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  body { background: #fff; font-size: 11pt; }
+  .no-print { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .print-area { box-shadow: none; border: none; padding: 0; }
+  .payslip { border: 1px solid #000; }
+  .ledger-table, .transfer-table { font-size: 9pt; }
+
+  /* 印刷対象（body[data-print]）だけを出す */
+  body[data-print] .print-area { display: none; }
+  body[data-print="pay"] #payslip,
+  body[data-print="transfer"] #transferOut,
+  body[data-print="ledger"] #ledgerOut { display: block; }
+}
+
+/* 注意書き：小さめの文字で控えめに表示 */
+.small-notice { font-size: 11px; line-height: 1.5; color: #555; }
+.small-notice ul { margin: 4px 0 0; padding-left: 1.2em; }
+.small-notice li { margin: 2px 0; }

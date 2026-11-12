@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>給与計算ツール｜給与明細・賃金台帳・振込一覧</title>
+<meta name="description" content="社員の給与・賞与を入力すると、給与明細・賃金台帳・振込一覧・源泉徴収票（参考）を作成して印刷できる無料ツールです。">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header no-print">
+  <div class="brand">給与計算ツール</div>
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="tab-pay" role="tab">給与明細</button>
+    <button class="tab" data-tab="tab-emp" role="tab">社員</button>
+    <button class="tab" data-tab="tab-ledger" role="tab">賃金台帳・振込・源泉票</button>
+  </nav>
+  <div class="data-tools">
+    <button id="exportBtn" type="button">データ書き出し</button>
+    <label class="file-btn">データ読込<input type="file" id="importFile" accept="application/json"></label>
+  </div>
+</header>
+
+<main>
+  <div class="notice no-print small-notice">
+    <ul>
+      <li>データはこのブラウザ内にのみ保存され、サーバーやインターネットには送られません。消去・端末変更で失われるため、「データ書き出し」で定期的にバックアップしてください。</li>
+      <li>所得税は国税庁の月額表（令和8年分・甲欄／乙欄）で計算します。障害者・寡婦などの控除、賞与の年末調整は反映していません。</li>
+      <li>社会保険料・所得税は概算です。支払い・納付の前に公式情報で確認してください。</li>
+      <li>料率の適用情報：<span id="ratesInfo"></span></li>
+    </ul>
+  </div>
+
+  <!-- 給与明細 -->
+  <section id="tab-pay" class="tab-panel">
+    <div class="grid-2">
+      <form id="payForm" class="card no-print" autocomplete="off">
+        <h2>入力</h2>
+        <label>社員<select id="paySelect"></select></label>
+        <div class="row">
+          <label>対象年月（支払月）<input type="month" id="payYm" required></label>
+          <label>区分
+            <select id="payKind">
+              <option value="salary">給与</option>
+              <option value="bonus">賞与</option>
+            </select>
+          </label>
+        </div>
+        <p class="hint">基本給・時間外・通勤手当・不就労控除は、右の明細の枠の中で直接入力します。</p>
+
+        <div id="salaryFields">
+          <div class="dyn-section">
+            <div class="dyn-head"><span>手当</span><button type="button" id="addAllowBtn">＋ その他手当</button></div>
+            <div id="allowRows"></div>
+            <p class="hint">よく使う手当は行を固定しています。課税は所得税の対象、非課税は社会保険料の対象のみです。</p>
+          </div>
+          <div class="dyn-section">
+            <div class="dyn-head"><span>その他控除</span><button type="button" id="addDedBtn">＋ その他控除</button></div>
+            <div id="dedRows"></div>
+            <p class="hint">社宅家賃は固定行です。社会保険料控除には含まれず、差引支給額から引かれます。</p>
+          </div>
+          <div class="row">
+            <label>労働日数<input type="text" inputmode="numeric" id="days" placeholder="0"></label>
+            <label>労働時間数<input type="text" inputmode="numeric" id="hours" placeholder="0"></label>
+          </div>
+        </div>
+        <div id="bonusFields" class="hidden">
+          <label>参考：通常の月額総支給（所得税の計算用）<input type="text" inputmode="numeric" id="refMonthly" placeholder="0"></label>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="copyPrevBtn">前月の入力をコピー</button>
+          <button type="button" id="clearPayBtn">この月の入力を消去</button>
+        </div>
+        <div class="actions">
+          <button type="button" id="printPayBtn" class="primary">給与明細を印刷</button>
+          <button type="button" id="mailPayBtn">メールで送る</button>
+          <button type="button" id="linePayBtn">LINEで送る</button>
+        </div>
+        <p class="hint" id="shareMsg"></p>
+        <p class="hint">計算結果は概算です。確定値は給与計算ソフト・税務署・自治体の公表値で必ずご確認ください。</p>
+      </form>
+
+      <div>
+        <div id="payslip" class="print-area payslip"></div>
+        <details class="card no-print breakdown">
+          <summary>計算の内訳（等級・概算の前提）</summary>
+          <div id="breakdown"></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- 社員 -->
+  <section id="tab-emp" class="tab-panel hidden">
+    <div class="grid-2">
+      <form id="empForm" class="card" autocomplete="off">
+        <h2 id="empFormTitle">社員を追加</h2>
+        <input type="hidden" id="empId">
+        <label>氏名<input type="text" id="empName" required></label>
+        <label>会社名<input type="text" id="empCompany"></label>
+        <label class="check"><input type="checkbox" id="empInsured" checked> 社会保険に加入（健康保険・厚生年金）</label>
+        <label>事業所の都道府県（健康保険料率）
+          <select id="empPref"></select>
+        </label>
+        <label id="empCustomRateLabel">健康保険料率（％・手入力）<input type="text" inputmode="decimal" id="empCustomRate" placeholder="例：9.90"></label>
+        <p class="hint" id="empRateHint"></p>
+        <label>雇用保険
+          <select id="empEmp">
+            <option value="none">未加入</option>
+            <option value="general">一般の事業</option>
+            <option value="agri">農林水産・清酒製造の事業</option>
+            <option value="construction">建設の事業</option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="empAge40"> 40歳以上（介護保険あり）</label>
+        <label>扶養人数（所得税の源泉徴収額・甲欄用）
+          <select id="empDeps"></select>
+        </label>
+        <label>源泉徴収票の区分（甲欄・乙欄）
+          <select id="empWithholding">
+            <option value="kou">甲欄（主たる給与）</option>
+            <option value="otsu">乙欄（副業・2か所目の給与）</option>
+          </select>
+        </label>
+        <label>メールアドレス（送信先・任意）<input type="email" id="empEmail" placeholder="例：taro@example.com"></label>
+        <div class="actions">
+          <button type="submit" class="primary">保存</button>
+          <button type="button" id="empResetBtn">新規入力に戻す</button>
+        </div>
+      </form>
+      <div class="card">
+        <h2>社員一覧</h2>
+        <table class="list">
+          <thead><tr><th>氏名</th><th>会社名</th><th>社保</th><th>雇用保険</th><th></th></tr></thead>
+          <tbody id="empList"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 台帳・振込・源泉票 -->
+  <section id="tab-ledger" class="tab-panel hidden">
+    <div class="card no-print">
+      <h2>振込一覧</h2>
+      <div class="row">
+        <label>対象年月<input type="month" id="transferYm"></label>
+        <div class="actions align-end"><button type="button" id="printTransferBtn" class="primary">振込一覧を印刷</button></div>
+      </div>
+      <p class="hint">振込先の金融機関・口座番号はこのツールでは扱いません（個人の口座情報は保存しない方針です）。</p>
+    </div>
+    <div id="transferOut" class="print-area"></div>
+
+    <div class="card no-print">
+      <h2>賃金台帳</h2>
+      <div class="row">
+        <label>社員<select id="ledgerEmp"></select></label>
+        <label>年<input type="number" id="ledgerYear" min="2000" max="2100"></label>
+      </div>
+      <div class="actions">
+        <button type="button" id="printLedgerBtn" class="primary">賃金台帳を印刷</button>
+        <button type="button" id="printGensenBtn">源泉徴収票（参考）を印刷</button>
+      </div>
+    </div>
+    <div id="ledgerOut" class="print-area"></div>
+    <div id="gensenOut" class="print-area"></div>
+  </section>
+</main>
+
+<script src="data/rates.js"></script>
+<script src="js/calc.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
