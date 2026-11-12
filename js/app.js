@@ -590,7 +590,7 @@
 <p class="note">※差引支給額の概算です。振込先の金融機関・口座はこの一覧には含みません。</p>`;
   }
 
-  // ---------- 賃金台帳・源泉徴収票（参考） ----------
+  // ---------- 賃金台帳 ----------
   const LEDGER_COLS = [
     ["days", "日数"], ["hours", "時間"], ["basic", "基本給"], ["overtime", "時間外"], ["commute", "通勤(非)"],
     ["absence", "不就労控除"], ["allowTotal", "手当計"], ["gross", "総支給額"],
@@ -638,42 +638,6 @@
 </table>
 </div>
 <p class="note">※所得税・社会保険料は概算です。賞与は「賞与」と表示しています。</p>`;
-  }
-
-  // 源泉徴収票（参考）：年間の記録から概算の項目を並べる。正式な様式・年末調整の結果とは一致しない
-  function renderGensen() {
-    const emp = db.employees.find((e) => e.id === val("ledgerEmp"));
-    const year = String(Number(val("ledgerYear")) || new Date().getFullYear());
-    if (!emp) { $("gensenOut").innerHTML = '<p class="hint">社員を登録してください。</p>'; return; }
-    const items = yearItems(emp, year);
-    if (!items.length) { $("gensenOut").innerHTML = `<div class="card"><p class="hint">${esc(year)}年の入力データがありません。</p></div>`; return; }
-    let pay = 0, social = 0, socialTax = 0, tax = 0;
-    items.forEach(({ r }) => {
-      pay += r.gross;
-      social += r.socialTotal;
-      socialTax += r.socialForTax;
-      tax += r.incomeTax;
-    });
-    const salaryDed = C.salaryDeduction(pay, R.incomeTax.salaryDeductionMinimum);
-    const afterDed = Math.max(0, pay - salaryDed);
-    const dep = Math.max(0, Math.min(7, Number(emp.deps) || 0));
-    const basic = R.incomeTax.basicDeduction;
-    const depDed = dep * R.incomeTax.dependentDeduction;
-    $("gensenOut").innerHTML = `
-<h3>源泉徴収票（参考・概算）　${esc(year)}年分</h3>
-<p>氏名：${esc(emp.name)}　勤務先：${esc(emp.company)}</p>
-<table class="transfer-table">
-  <tbody>
-    <tr><td class="l">支払金額（給与・賞与の総支給合計）</td><td>${fmt(pay)}</td></tr>
-    <tr><td class="l">給与所得控除後の金額（概算）</td><td>${fmt(afterDed)}</td></tr>
-    <tr><td class="l">社会保険料等の金額（健康・介護・厚生年金・雇用保険）</td><td>${fmt(social)}</td></tr>
-    <tr><td class="l">社会保険料控除の対象額（健康・介護・厚生年金）</td><td>${fmt(socialTax)}</td></tr>
-    <tr><td class="l">基礎控除（概算）</td><td>${fmt(basic)}</td></tr>
-    <tr><td class="l">扶養控除（一般の扶養親族・概算）</td><td>${fmt(depDed)}</td></tr>
-    <tr><td class="l">源泉徴収税額（所得税の合計・概算）</td><td>${fmt(tax)}</td></tr>
-  </tbody>
-</table>
-<p class="note">※参考用の概算です。正式な源泉徴収票の様式ではなく、年末調整の結果とは一致しません。手当の課税区分・扶養の条件などは反映しきれていません。</p>`;
   }
 
   // ---------- データの書き出し・読込 ----------
@@ -892,10 +856,9 @@
 
     $("transferYm").addEventListener("change", renderTransfer);
     $("printTransferBtn").addEventListener("click", () => printTarget("transfer", renderTransfer));
-    $("ledgerEmp").addEventListener("change", () => { renderLedger(); renderGensen(); });
-    $("ledgerYear").addEventListener("change", () => { renderLedger(); renderGensen(); });
+    $("ledgerEmp").addEventListener("change", renderLedger);
+    $("ledgerYear").addEventListener("change", renderLedger);
     $("printLedgerBtn").addEventListener("click", () => printTarget("ledger", renderLedger));
-    $("printGensenBtn").addEventListener("click", () => printTarget("gensen", renderGensen));
 
     $("exportBtn").addEventListener("click", exportData);
     $("importFile").addEventListener("change", (ev) => { if (ev.target.files[0]) importData(ev.target.files[0]); });

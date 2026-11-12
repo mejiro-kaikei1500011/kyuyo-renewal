@@ -56,13 +56,6 @@ const copied = JSON.parse(w.localStorage.getItem("kyuyo-renewal-v1")).records.sa
 ok("copy prev: basic copied", copied && copied.basic === "250000");
 ok("copy prev: days not copied", copied && copied.days === "");
 
-// 6. 源泉徴収票（参考）
-$("ledgerEmp").value = "sample1";
-$("ledgerEmp").dispatchEvent(new w.Event("change", { bubbles: true }));
-$("printGensenBtn").click && 0;
-const gensenText = $("gensenOut").textContent;
-ok("gensen rendered", gensenText.includes("源泉徴収票（参考・概算）"));
-ok("gensen has tax row", gensenText.includes("源泉徴収税額"));
 
 // 7. 賃金台帳と振込一覧
 ok("ledger rendered", $("ledgerOut").textContent.includes("賃金台帳"));
